@@ -8,11 +8,8 @@ public class MyServerSocket {
     public ServerSocket server = null;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    public MyServerSocket(String ipAddress) throws Exception {
-        if (ipAddress != null && !ipAddress.isEmpty())
-            this.server = new ServerSocket(65000, 1, InetAddress.getByName(ipAddress));
-        else
-            this.server = new ServerSocket(65000, 1, InetAddress.getLocalHost());
+    public MyServerSocket() throws Exception {
+        this.server = new ServerSocket(65000, 1, InetAddress.getLocalHost());
     }
 
     private void listen() throws Exception {
@@ -25,7 +22,8 @@ public class MyServerSocket {
         }
     }
 
-    // ################## TOKEN GENERATOR #######################################################
+    // ############################################### TOKEN GENERATOR
+
     public static String generateToken(int length) {
         Random random = new Random(); // Simple Random
         StringBuilder token = new StringBuilder(length);
@@ -39,7 +37,8 @@ public class MyServerSocket {
         return token.toString();
     }
 
-    // ################## CLIENT HANDER #######################################################
+    // #################################################### CLIENT HANDER
+
     private class ClientHandler extends Thread {
         private Socket client;
         private BufferedReader in;
@@ -60,18 +59,47 @@ public class MyServerSocket {
             try {
                 String data;
                 while ((data = in.readLine()) != null) {
-                    System.out.println("Message from client " + clientNumber + ": " + data);
 
-                    switch (data){
-                        case "REGISTER":
-                            out.write("REGISTERED: " + token);
+                    System.out.println("Message from client " + clientNumber + ": " + data);
+                    String[] parts = data.split("\\|");
+                    String COMMAND = parts.length > 0 ? parts[0] : "";
+                    String second = parts.length > 1 ? parts[1] : "";
+                    String third = parts.length > 2 ? parts[2] : "";
+                    String fourth = parts.length > 3 ? parts[3] : "";
+                    String fifth = parts.length > 4 ? parts[4] : "";
+
+                    if (COMMAND.contains("REGISTER")) {
+                        out.write("REGISTERED: " + token);
+                        out.newLine();
+                        out.flush();
+                    } 
+                    
+                    else if (COMMAND.contains("LS")) {
+                        if (second == token) {
+                            File FILES = new File("Files_list.txt");
+                            Scanner myReader = new Scanner(FILES);
+                            if (FILES.exists()) {
+                                out.write("FILE LIST:");
+                                out.newLine();
+                                while (myReader.hasNextLine()) {
+                                    String filedata = myReader.nextLine();
+                                    out.write(filedata);
+                                    out.newLine();
+                                }
+                            }
+                            myReader.close();
+                            out.flush();
+                        }
+                        else if(second != token){
+                            out.write("LS|UNAUTHORIZED");
                             out.newLine();
                             out.flush();
-                            break;
-                        default:
-                            out.write("INVALID COMMAND");
-                            out.newLine();
-                            out.flush();    
+                        }
+                    } 
+                    else {
+                        out.write("INVALID COMMAND");
+                        out.newLine();
+                        out.flush();
                     }
                 }
             } catch (IOException e) {
@@ -80,7 +108,7 @@ public class MyServerSocket {
         }
     }
 
-    // ########################### MAIN ###################################################################################
+    // #################################################################### MAIN
     public InetAddress getSocketAddress() {
         return this.server.getInetAddress();
     }
@@ -90,7 +118,7 @@ public class MyServerSocket {
     }
 
     public static void main(String[] args) throws Exception {
-        MyServerSocket app = new MyServerSocket(args[0]);
+        MyServerSocket app = new MyServerSocket();
         System.out.println(
                 "Running Server: " + "Host=" + app.getSocketAddress().getHostAddress() + " Port=" + app.getPort());
         try {
@@ -107,7 +135,7 @@ public class MyServerSocket {
                     InetAddress address = InetAddress.getByName(ipAddress);
                     boolean reachable = address.isReachable(Integer.parseInt(port));
 
-                    System.out.println(reachable ? data + " is reachable" : data + "is not reachable");
+                    System.out.println(reachable ? data + " is reachable" : data + " is not reachable");
                 }
             }
             myReader.close();
