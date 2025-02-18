@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
+import java.util.Random;
 
 public class MyServerSocket {
 
@@ -72,7 +73,14 @@ public class MyServerSocket {
                 System.out.println("Peers List: ");
                 while (myReader.hasNextLine()){
                     String data = myReader.nextLine();
-                    System.out.println(data);
+                    String[] parts = data.split(":");
+                    String ipAddress = parts[0].trim();  // IP address
+                    String port = parts[1].trim();       // Port
+
+                    InetAddress address = InetAddress.getByName(ipAddress);
+                    boolean reachable = address.isReachable(Integer.parseInt(port));
+                    
+                    System.out.println(reachable ? data + " is reachable" : data + "is not reachable");
                 }
             }
             myReader.close();
