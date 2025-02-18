@@ -75,22 +75,23 @@ public class MyServerSocket {
                     } 
                     
                     else if (COMMAND.contains("LS")) {
-                        if (second == token) {
+                        if (second.equals(token)) {
                             File FILES = new File("Files_list.txt");
                             Scanner myReader = new Scanner(FILES);
                             if (FILES.exists()) {
-                                out.write("FILE LIST:");
-                                out.newLine();
+                                String FILEOUTPUT = "LS|K|";
                                 while (myReader.hasNextLine()) {
                                     String filedata = myReader.nextLine();
-                                    out.write(filedata);
-                                    out.newLine();
+                                    FILEOUTPUT += filedata+"|";
                                 }
+                                out.write(FILEOUTPUT);
+                                out.newLine();
+                                out.flush();
                             }
                             myReader.close();
                             out.flush();
                         }
-                        else if(second != token){
+                        else if(!(second.equals(token))){
                             out.write("LS|UNAUTHORIZED");
                             out.newLine();
                             out.flush();
