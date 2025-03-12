@@ -1,6 +1,6 @@
-1. SAve client tokens in DB or in variable is ok?
-2. End process with file error or continue?
-3. If first packet is less than 500 must it be isLast
-4. Est-ce que WRITE c'est comme un upload et il faut commencer avec un fichier existant??
-5. Pour fichier sur mem machine que server, peut mettre ip dans liste quand meme?
-6. READ to client, how receive data?
+1. Do i need to save the client token in a file or DB or can I simply create the thread and store it in a variable?
+2. At any point do I want to end a thread when an error occurs? Do I need to handle all exceptions (Incorrect inputs)?
+3. In file list, the structure is: Filename:IP:port. The enoncé says if a file is local, no need to write the address. Can i put it if i'd like?
+4. READ to client, how receive data? Display in client console the contents or download to .txt file?
+5. Update file_list and PeerList of all other servers when writing file?
+6. Do we need to worry about file duplicates? If a client tries to upload an existing file?
