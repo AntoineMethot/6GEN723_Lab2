@@ -45,6 +45,7 @@ public class MyServerSocket {
         private BufferedWriter out;
         private int clientNumber;
         private String token;
+        private String authorizedFileToWrite = null;
 
         public ClientHandler(Socket client, int clientNumber, String token) throws IOException {
             this.client = client;
@@ -68,12 +69,15 @@ public class MyServerSocket {
                     String fourth = parts.length > 3 ? parts[3] : "";
                     String fifth = parts.length > 4 ? parts[4] : "";
 
+                    //################################################## REGISTER COMMAND
+                    //REGISTER|IP_CLIENT|
                     if (COMMAND.contains("REGISTER")) {
                         out.write("REGISTERED: " + token);
                         out.newLine();
                         out.flush();
                     } 
-                    
+                    //################################################## LS COMMAND
+                    //LS|JETONCLIENT
                     else if (COMMAND.contains("LS")) {
                         if (second.equals(token)) {
                             File FILES = new File("Files_list.txt");
@@ -93,6 +97,42 @@ public class MyServerSocket {
                         }
                         else if(!(second.equals(token))){
                             out.write("LS|UNAUTHORIZED");
+                            out.newLine();
+                            out.flush();
+                        }
+                    }
+                    //################################################## WRITE COMMAND
+                    //WRITE|JETONCLIENT|NOM_FICHIER
+                    else if (COMMAND.contains("WRITE")) {
+                        if (second.equals(token)) {
+                            out.write("WRITE|BEGIN");  
+                            authorizedFileToWrite = third;
+                            out.newLine();
+                            out.flush();
+                        }
+                        else if(!(second.equals(token))){
+                            out.write("WRITE|UNAUTHORIZED");
+                            out.newLine();
+                            out.flush();
+                        }
+                    } 
+                    //################################################## FILE COMMAND
+                    //FILE|nom_fichier|offset|iLAST|500
+                    else if (COMMAND.contains("FILE")) {
+                        if ((authorizedFileToWrite != null) && (second.equals(authorizedFileToWrite))) {
+                            out.write("FILE|BEGIN");  
+                            out.newLine();
+                            out.flush();
+                        }
+                        else if(authorizedFileToWrite == null){
+                            out.write("REQUEST WRITE AUTHORIZATION");
+                            out.newLine();
+                            out.flush();
+                        }
+                        else if(!second.equals(authorizedFileToWrite)){
+                            System.out.println(second);
+                            System.out.println(authorizedFileToWrite);
+                            out.write("NOT AUTHORIZED FOR THIS FILE");
                             out.newLine();
                             out.flush();
                         }
@@ -122,6 +162,7 @@ public class MyServerSocket {
         MyServerSocket app = new MyServerSocket();
         System.out.println(
                 "Running Server: " + "Host=" + app.getSocketAddress().getHostAddress() + " Port=" + app.getPort());
+
         try {
             File Peers = new File("Peers_list.txt");
             Scanner myReader = new Scanner(Peers);
