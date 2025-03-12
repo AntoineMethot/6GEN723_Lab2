@@ -69,15 +69,15 @@ public class MyServerSocket {
                     String fourth = parts.length > 3 ? parts[3] : "";
                     String fifth = parts.length > 4 ? parts[4] : "";
 
-                    //################################################## REGISTER COMMAND
-                    //REGISTER|IP_CLIENT|
+                    // ################################################## REGISTER COMMAND
+                    // REGISTER|IP_CLIENT|
                     if (COMMAND.contains("REGISTER")) {
                         out.write("REGISTERED: " + token);
                         out.newLine();
                         out.flush();
-                    } 
-                    //################################################## LS COMMAND
-                    //LS|JETONCLIENT
+                    }
+                    // ################################################## LS COMMAND
+                    // LS|JETONCLIENT
                     else if (COMMAND.contains("LS")) {
                         if (second.equals(token)) {
                             File FILES = new File("Files_list.txt");
@@ -86,7 +86,7 @@ public class MyServerSocket {
                                 String FILEOUTPUT = "LS|K|";
                                 while (myReader.hasNextLine()) {
                                     String filedata = myReader.nextLine();
-                                    FILEOUTPUT += filedata+"|";
+                                    FILEOUTPUT += filedata + "|";
                                 }
                                 out.write(FILEOUTPUT);
                                 out.newLine();
@@ -94,50 +94,92 @@ public class MyServerSocket {
                             }
                             myReader.close();
                             out.flush();
-                        }
-                        else if(!(second.equals(token))){
+                        } else if (!(second.equals(token))) {
                             out.write("LS|UNAUTHORIZED");
                             out.newLine();
                             out.flush();
                         }
                     }
-                    //################################################## WRITE COMMAND
-                    //WRITE|JETONCLIENT|NOM_FICHIER
+                    // ################################################## WRITE COMMAND
+                    // WRITE|JETONCLIENT|NOM_FICHIER
                     else if (COMMAND.contains("WRITE")) {
                         if (second.equals(token)) {
-                            out.write("WRITE|BEGIN");  
+                            out.write("WRITE|BEGIN");
                             authorizedFileToWrite = third;
                             out.newLine();
                             out.flush();
-                        }
-                        else if(!(second.equals(token))){
+                        } else if (!(second.equals(token))) {
                             out.write("WRITE|UNAUTHORIZED");
                             out.newLine();
                             out.flush();
                         }
-                    } 
-                    //################################################## FILE COMMAND
-                    //FILE|nom_fichier|offset|iLAST|500
+                    }
+                    // ################################################## FILE COMMAND
+                    // FILE|nom_fichier|offset|iLAST|500
                     else if (COMMAND.contains("FILE")) {
-                        if ((authorizedFileToWrite != null) && (second.equals(authorizedFileToWrite))) {
-                            out.write("FILE|BEGIN");  
+                        if (authorizedFileToWrite != null && second.equals(authorizedFileToWrite)) {
+                            if (parts.length < 5) {
+                                out.write("FILE|ERROR|Invalid format");
+                                out.newLine();
+                                out.flush();
+                                continue;
+                            }
+
+                            //Save file information
+                            String filename = second;
+                            int offset = Integer.parseInt(third);
+                            boolean isLast = fourth.equals("1");
+                            String content = fifth;
+                            int offsetCounter = 0;
+
+                            File dir = new File("uploads");
+                            if (!dir.exists())
+                                dir.mkdir();
+                            //Write content to file
+                            File file = new File(dir, filename);
+                            FileWriter fw = new FileWriter(file, true); // Append mode
+                            fw.write(content);
+                            fw.close();
+                            //Write out length of 
+                            System.out.println("Received fragment " + offset + " for file " + filename);
+                            out.write("FILE|RECEIVED|" + (offsetCounter+content.length()));
+                            offsetCounter += content.length();
                             out.newLine();
                             out.flush();
-                        }
-                        else if(authorizedFileToWrite == null){
+
+                            if (isLast) {
+                                System.out.println("File transfer complete: " + filename);
+                                out.write("FILE|DONE|" + filename);
+                                out.newLine();
+                                out.flush();
+                                
+                                // Append to Files_list.txt
+                                try (BufferedWriter fileWriter = new BufferedWriter(
+                                        new FileWriter("Files_list.txt", true))) {
+                                    String serverIP = client.getLocalAddress().getHostAddress();
+                                    int serverPort = client.getLocalPort();
+                                    fileWriter.write(filename + ":" + serverIP + ":" + serverPort);
+                                    fileWriter.newLine();
+                                } catch (IOException e) {
+                                    System.err.println("Error writing to Files_list.txt: " + e.getMessage());
+                                }
+                                // Clear authorization after file is fully received
+                                authorizedFileToWrite = null;
+                            }
+
+                        } else if (authorizedFileToWrite == null) {
                             out.write("REQUEST WRITE AUTHORIZATION");
                             out.newLine();
                             out.flush();
-                        }
-                        else if(!second.equals(authorizedFileToWrite)){
+                        } else if (!second.equals(authorizedFileToWrite)) {
                             System.out.println(second);
                             System.out.println(authorizedFileToWrite);
                             out.write("NOT AUTHORIZED FOR THIS FILE");
                             out.newLine();
                             out.flush();
                         }
-                    } 
-                    else {
+                        // ################################################ WRONG COMMAND
+                    } else {
                         out.write("INVALID COMMAND");
                         out.newLine();
                         out.flush();
