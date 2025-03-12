@@ -22,6 +22,29 @@ public class MyServerSocket {
         }
     }
 
+    public void connectToAnotherServer(String serverBIP, int serverBPort) {
+        try {
+            // Create a socket to connect to Server B
+            Socket serverBSocket = new Socket(serverBIP, serverBPort);
+
+            // Set up input/output streams for communication
+            BufferedReader serverBIn = new BufferedReader(new InputStreamReader(serverBSocket.getInputStream()));
+            PrintWriter serverBOut = new PrintWriter(serverBSocket.getOutputStream(), true);
+
+            // Send a message to Server B
+            serverBOut.println("Hello from Server A!");
+
+            // Receive a response from Server B
+            String response = serverBIn.readLine();
+            System.out.println("Response from Server B: " + response);
+
+            // Close the connection to Server B
+            serverBSocket.close();
+        } catch (IOException e) {
+            System.out.println("Error connecting to Server B: " + e.getMessage());
+        }
+    }
+
     // ############################################### TOKEN GENERATOR
 
     public static String generateToken(int length) {
@@ -220,30 +243,47 @@ public class MyServerSocket {
 
     public static void main(String[] args) throws Exception {
         MyServerSocket app = new MyServerSocket();
-        System.out.println(
-                "Running Server: " + "Host=" + app.getSocketAddress().getHostAddress() + " Port=" + app.getPort());
+        System.out.println("Running Server: " + "Host=" + app.getSocketAddress().getHostAddress() + " Port=" + app.getPort());
 
-        try {
-            File Peers = new File("Peers_list.txt");
-            Scanner myReader = new Scanner(Peers);
-            if (Peers.exists()) {
-                System.out.println("Peers List: ");
-                while (myReader.hasNextLine()) {
-                    String data = myReader.nextLine();
-                    String[] parts = data.split(":");
-                    String ipAddress = parts[0].trim(); // IP address
-                    String port = parts[1].trim(); // Port
+        // try {
+        //     File Peers = new File("Peers_list.txt");
+        //     Scanner myReader = new Scanner(Peers);
+        //     if (Peers.exists()) {
+        //         System.out.println("Peers List: ");
+        //         while (myReader.hasNextLine()) {
+        //             String data = myReader.nextLine();
+        //             String[] parts = data.split(":");
+        //             String ipAddress = parts[0].trim(); // IP address
+        //             String port = parts[1].trim(); // Port
 
-                    InetAddress address = InetAddress.getByName(ipAddress);
-                    boolean reachable = address.isReachable(Integer.parseInt(port));
+        //             InetAddress address = InetAddress.getByName(ipAddress);
+        //             boolean reachable = address.isReachable(Integer.parseInt(port));
 
-                    System.out.println(reachable ? data + " is reachable" : data + " is not reachable");
-                }
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("File not Found");
-            e.printStackTrace();
+        //             System.out.println(reachable ? data + " is reachable" : data + " is not reachable");
+        //         }
+        //     }
+        //     myReader.close();
+        // } catch (FileNotFoundException e) {
+        //     System.out.println("File not Found");
+        //     e.printStackTrace();
+        // }
+
+        System.out.println("Connect to another server? (Y/N):");
+        Scanner input = new Scanner(System.in);
+        String connectToServer = input.nextLine();
+        if(connectToServer.equals("Y")){
+            System.out.println("Enter IP and PORT (EX. 192.168.1.1:65000)");
+            String serverAddress = input.nextLine();
+            input.close();
+
+            String[] serverAddressParts = serverAddress.split(":");
+            String ServerIp = serverAddressParts[0];
+            int ServerPort = Integer.parseInt(serverAddressParts[1]);
+
+            app.connectToAnotherServer(ServerIp, ServerPort);
+        }
+        else if (connectToServer.equals("N")) {
+            
         }
 
         app.listen();
