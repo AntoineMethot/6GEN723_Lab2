@@ -45,7 +45,7 @@ public class MyServerSocket {
         }
     }
 
-    // ############################################### TOKEN GENERATOR
+    // ################################################################################################### TOKEN GENERATOR
 
     public static String generateToken(int length) {
         Random random = new Random(); // Simple Random
@@ -60,7 +60,7 @@ public class MyServerSocket {
         return token.toString();
     }
 
-    // #################################################### CLIENT HANDER
+    // ################################################################################################## CLIENT HANDER
 
     private class ClientHandler extends Thread {
         private Socket client;
@@ -92,14 +92,14 @@ public class MyServerSocket {
                     String fourth = parts.length > 3 ? parts[3] : "";
                     String fifth = parts.length > 4 ? parts[4] : "";
 
-                    // ################################################## REGISTER COMMAND
+                    // ################################################################################### REGISTER COMMAND
                     // REGISTER|IP_CLIENT|
                     if (COMMAND.contains("REGISTER")) {
                         out.write("REGISTERED: " + token);
                         out.newLine();
                         out.flush();
                     }
-                    // ################################################## LS COMMAND
+                    // ######################################################################################## LS COMMAND
                     // LS|JETONCLIENT
                     else if (COMMAND.contains("LS")) {
                         if (second.equals(token)) {
@@ -123,7 +123,7 @@ public class MyServerSocket {
                             out.flush();
                         }
                     }
-                    // ################################################## WRITE COMMAND
+                    // ################################################################################### WRITE COMMAND
                     // WRITE|JETONCLIENT|NOM_FICHIER
                     else if (COMMAND.contains("WRITE")) {
                         if (second.equals(token)) {
@@ -137,7 +137,7 @@ public class MyServerSocket {
                             out.flush();
                         }
                     }
-                    // ################################################## FILE COMMAND
+                    // ################################################################################# FILE COMMAND
                     // FILE|nom_fichier|offset|iLAST|500
                     else if (COMMAND.contains("FILE")) {
                         if (authorizedFileToWrite != null && second.equals(authorizedFileToWrite)) {
@@ -175,7 +175,8 @@ public class MyServerSocket {
                                 out.flush();
 
                                 // Append to Files_list.txt
-                                try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("Files_list.txt", true))) {
+                                try (BufferedWriter fileWriter = new BufferedWriter(
+                                        new FileWriter("Files_list.txt", true))) {
                                     String serverIP = client.getLocalAddress().getHostAddress();
                                     int serverPort = client.getLocalPort();
                                     fileWriter.write(filename + ":" + serverIP + ":" + serverPort);
@@ -199,12 +200,13 @@ public class MyServerSocket {
                                     }
 
                                     if (!peerExists) {
-                                        try (BufferedWriter peersWriter = new BufferedWriter(new FileWriter(peersFile, true))) {
+                                        try (BufferedWriter peersWriter = new BufferedWriter(
+                                                new FileWriter(peersFile, true))) {
                                             peersWriter.write(peerEntry);
                                             peersWriter.newLine();
                                         }
                                     }
-    
+
                                 } catch (IOException e) {
                                     System.err.println("Error writing to Files_list.txt: " + e.getMessage());
                                 }
@@ -223,7 +225,7 @@ public class MyServerSocket {
                             out.newLine();
                             out.flush();
                         }
-                        // ################################################ READ COMMAND
+                        // ########################################################################### READ COMMAND
                         // READ|jeton_client|nom_fichier|
                     } else if (COMMAND.contains("READ")) {
                         if (second.equals(token)) {
@@ -233,8 +235,41 @@ public class MyServerSocket {
                             boolean fileFound = false;
                             boolean localFile = false;
                             String fileOwnerIP = "";
-                            String filOwnerPort = "";
+                            String fileOwnerPort = "";
 
+                            try (BufferedReader reader = new BufferedReader(new FileReader(filesList))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    String[] fileparts = line.split(":"); // Split the line into [filename, ip, port]
+                                    System.out.println(fileparts[0]);
+                                    System.out.println(fileparts[1]);
+                                    System.out.println(fileparts[2]);
+                                    if (fileparts.length == 3 && fileparts[0].equals(requestedFile)) {
+                                        fileFound = true;
+                                        fileOwnerIP = fileparts[1];
+                                        fileOwnerPort = fileparts[2];
+                                        System.out.println("INSIDE IF");
+
+                                        // Compare with local server IP and port
+                                        String localIP = client.getLocalAddress().getHostAddress();
+                                        int localPort = client.getLocalPort();
+
+                                        if (fileOwnerIP.equals(localIP) && fileOwnerPort.equals(String.valueOf(localPort))) {
+                                            localFile = true;
+                                            System.out.println("############LOCAL FILE##########");
+                                        }
+                                        break; // Exit once file is found
+                                    }
+                                }
+                            } catch (IOException e) {
+                                System.err.println("Error reading Files_list.txt: " + e.getMessage());
+                            }
+
+                            if (!fileFound) {
+                                out.write("READ|FILE NOT FOUND|" + requestedFile);
+                                out.newLine();
+                                out.flush();
+                            }
                         } else if (!(second.equals(token))) {
                             out.write("READ|UNAUTHORIZED");
                             out.newLine();
