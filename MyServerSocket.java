@@ -127,7 +127,7 @@ public class MyServerSocket {
                     // WRITE|JETONCLIENT|NOM_FICHIER
                     else if (COMMAND.contains("WRITE")) {
                         if (second.equals(token)) {
-                            out.write("WRITE|BEGIN");
+                            out.write("WRITE|BEGIN|"+third);
                             authorizedFileToWrite = third;
                             out.newLine();
                             out.flush();
@@ -153,7 +153,6 @@ public class MyServerSocket {
                             int offset = Integer.parseInt(third);
                             boolean isLast = fourth.equals("1");
                             String content = fifth;
-                            int offsetCounter = 0;
 
                             File dir = new File("uploads");
                             if (!dir.exists())
@@ -165,8 +164,7 @@ public class MyServerSocket {
                             fw.close();
                             // Write out length of message
                             System.out.println("Received fragment " + offset + " for file " + filename);
-                            out.write("FILE|RECEIVED|" + (offsetCounter + content.length()));
-                            offsetCounter += content.length();
+                            out.write("FILE|RECEIVED|" + (content.length()));
                             out.newLine();
                             out.flush();
 
@@ -183,6 +181,7 @@ public class MyServerSocket {
                                     int serverPort = client.getLocalPort();
                                     fileWriter.write(filename + ":" + serverIP + ":" + serverPort);
                                     fileWriter.newLine();
+                                    fileWriter.flush();
                                 } catch (IOException e) {
                                     System.err.println("Error writing to Files_list.txt: " + e.getMessage());
                                 }
@@ -268,23 +267,23 @@ public class MyServerSocket {
         //     e.printStackTrace();
         // }
 
-        System.out.println("Connect to another server? (Y/N):");
-        Scanner input = new Scanner(System.in);
-        String connectToServer = input.nextLine();
-        if(connectToServer.equals("Y")){
-            System.out.println("Enter IP and PORT (EX. 192.168.1.1:65000)");
-            String serverAddress = input.nextLine();
-            input.close();
+        // System.out.println("Connect to another server? (Y/N):");
+        // Scanner input = new Scanner(System.in);
+        // String connectToServer = input.nextLine();
+        // if(connectToServer.equals("Y")){
+        //     System.out.println("Enter IP and PORT (EX. 192.168.1.1:65000)");
+        //     String serverAddress = input.nextLine();
+        //     input.close();
 
-            String[] serverAddressParts = serverAddress.split(":");
-            String ServerIp = serverAddressParts[0];
-            int ServerPort = Integer.parseInt(serverAddressParts[1]);
+        //     String[] serverAddressParts = serverAddress.split(":");
+        //     String ServerIp = serverAddressParts[0];
+        //     int ServerPort = Integer.parseInt(serverAddressParts[1]);
 
-            app.connectToAnotherServer(ServerIp, ServerPort);
-        }
-        else if (connectToServer.equals("N")) {
+        //     app.connectToAnotherServer(ServerIp, ServerPort);
+        // }
+        // else if (connectToServer.equals("N")) {
             
-        }
+        // }
 
         app.listen();
     }
