@@ -45,7 +45,8 @@ public class MyServerSocket {
         }
     }
 
-    // ################################################################################################### TOKEN GENERATOR
+    // ###################################################################################################
+    // TOKEN GENERATOR
 
     public static String generateToken(int length) {
         Random random = new Random(); // Simple Random
@@ -60,7 +61,8 @@ public class MyServerSocket {
         return token.toString();
     }
 
-    // ################################################################################################## CLIENT HANDER
+    // ##################################################################################################
+    // CLIENT HANDER
 
     private class ClientHandler extends Thread {
         private Socket client;
@@ -92,14 +94,16 @@ public class MyServerSocket {
                     String fourth = parts.length > 3 ? parts[3] : "";
                     String fifth = parts.length > 4 ? parts[4] : "";
 
-                    // ################################################################################### REGISTER COMMAND
+                    // ###################################################################################
+                    // REGISTER COMMAND
                     // REGISTER|IP_CLIENT|
                     if (COMMAND.contains("REGISTER")) {
                         out.write("REGISTERED: " + token);
                         out.newLine();
                         out.flush();
                     }
-                    // ######################################################################################## LS COMMAND
+                    // ########################################################################################
+                    // LS COMMAND
                     // LS|JETONCLIENT
                     else if (COMMAND.contains("LS")) {
                         if (second.equals(token)) {
@@ -123,7 +127,8 @@ public class MyServerSocket {
                             out.flush();
                         }
                     }
-                    // ################################################################################### WRITE COMMAND
+                    // ###################################################################################
+                    // WRITE COMMAND
                     // WRITE|JETONCLIENT|NOM_FICHIER
                     else if (COMMAND.contains("WRITE")) {
                         if (second.equals(token)) {
@@ -237,26 +242,24 @@ public class MyServerSocket {
                             String fileOwnerIP = "";
                             String fileOwnerPort = "";
 
+                            // CHECK IF FILE EXISTS AND IF ITS LOCAL
                             try (BufferedReader reader = new BufferedReader(new FileReader(filesList))) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
                                     String[] fileparts = line.split(":"); // Split the line into [filename, ip, port]
-                                    System.out.println(fileparts[0]);
-                                    System.out.println(fileparts[1]);
-                                    System.out.println(fileparts[2]);
                                     if (fileparts.length == 3 && fileparts[0].equals(requestedFile)) {
                                         fileFound = true;
                                         fileOwnerIP = fileparts[1];
                                         fileOwnerPort = fileparts[2];
-                                        System.out.println("INSIDE IF");
 
                                         // Compare with local server IP and port
                                         String localIP = client.getLocalAddress().getHostAddress();
                                         int localPort = client.getLocalPort();
 
-                                        if (fileOwnerIP.equals(localIP) && fileOwnerPort.equals(String.valueOf(localPort))) {
+                                        if (fileOwnerIP.equals(localIP)
+                                                && fileOwnerPort.equals(String.valueOf(localPort))) {
                                             localFile = true;
-                                            System.out.println("############LOCAL FILE##########");
+                                            System.out.println("############LOCAL FILE REQUESTED##########");
                                         }
                                         break; // Exit once file is found
                                     }
@@ -265,8 +268,52 @@ public class MyServerSocket {
                                 System.err.println("Error reading Files_list.txt: " + e.getMessage());
                             }
 
+
                             if (!fileFound) {
                                 out.write("READ|FILE NOT FOUND|" + requestedFile);
+                                out.newLine();
+                                out.flush();
+                            } else if (localFile) {
+                                // The file is found locally, send it to the client
+                                File file = new File("uploads/" + requestedFile);
+                                if (!file.exists()) {
+                                    out.write("READ|ERROR|File missing from disk");
+                                    out.newLine();
+                                    out.flush();
+                                } else {
+                                    // Send the file content in chunks
+                                    try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
+                                        int offset = 0;
+                                        int chunkSize = 500;
+                                        char[] buffer = new char[chunkSize];
+                                        int readCount;
+
+                                        while ((readCount = fileReader.read(buffer)) != -1) {
+                                            boolean isLast = readCount < chunkSize;
+                                            String content = new String(buffer, 0, readCount);
+                                            String fileCommand = String.format("FILE|%s|%d|%d|%s", requestedFile,offset, isLast ? 1 : 0, content);
+                                            out.write(fileCommand);
+                                            out.newLine();
+                                            out.flush();
+
+                                            offset += readCount;
+
+                                            // Optional: wait for client ACK (if needed)
+                                            // String ack = in.readLine();
+                                        }
+
+                                        // Optional: send a DONE message when file is fully sent
+                                        out.write("READ|DONE|" + requestedFile);
+                                        out.newLine();
+                                        out.flush();
+
+                                    } catch (IOException e) {
+                                        System.err.println("Error sending file: " + e.getMessage());
+                                    }
+                                }
+                            } else {
+                                // The file is not found locally, redirect to the server that owns the file
+                                out.write("READ|REDIRECT|" + fileOwnerIP + "|" + fileOwnerPort + "|" + requestedFile);
                                 out.newLine();
                                 out.flush();
                             }
