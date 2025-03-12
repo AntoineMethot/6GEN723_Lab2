@@ -1,3 +1,6 @@
 1. SAve client tokens in DB or in variable is ok?
 2. End process with file error or continue?
 3. If first packet is less than 500 must it be isLast
+4. Est-ce que WRITE c'est comme un upload et il faut commencer avec un fichier existant??
+5. Pour fichier sur mem machine que server, peut mettre ip dans liste quand meme?
+6. READ to client, how receive data?

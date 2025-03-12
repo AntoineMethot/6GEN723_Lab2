@@ -125,7 +125,7 @@ public class MyServerSocket {
                                 continue;
                             }
 
-                            //Save file information
+                            // Save file information
                             String filename = second;
                             int offset = Integer.parseInt(third);
                             boolean isLast = fourth.equals("1");
@@ -135,14 +135,14 @@ public class MyServerSocket {
                             File dir = new File("uploads");
                             if (!dir.exists())
                                 dir.mkdir();
-                            //Write content to file
+                            // Write content to file
                             File file = new File(dir, filename);
-                            FileWriter fw = new FileWriter(file, true); // Append mode
+                            FileWriter fw = new FileWriter(file, true);
                             fw.write(content);
                             fw.close();
-                            //Write out length of 
+                            // Write out length of message
                             System.out.println("Received fragment " + offset + " for file " + filename);
-                            out.write("FILE|RECEIVED|" + (offsetCounter+content.length()));
+                            out.write("FILE|RECEIVED|" + (offsetCounter + content.length()));
                             offsetCounter += content.length();
                             out.newLine();
                             out.flush();
@@ -152,7 +152,7 @@ public class MyServerSocket {
                                 out.write("FILE|DONE|" + filename);
                                 out.newLine();
                                 out.flush();
-                                
+
                                 // Append to Files_list.txt
                                 try (BufferedWriter fileWriter = new BufferedWriter(
                                         new FileWriter("Files_list.txt", true))) {
@@ -178,11 +178,29 @@ public class MyServerSocket {
                             out.newLine();
                             out.flush();
                         }
-                        // ################################################ WRONG COMMAND
+                        // ################################################ READ COMMAND
+                        //READ|jeton_client|nom_fichier|
+                    } else if (COMMAND.contains("READ")) {
+                        if (second.equals(token)) {
+
+                            String requestedFile = third;
+                            File filesList = new File("Files_list.txt");
+                            boolean fileFound = false;
+                            boolean localFile = false;
+                            String fileOwnerIP = "";
+                            String filOwnerPort = "";
+
+                        } else if (!(second.equals(token))) {
+                            out.write("READ|UNAUTHORIZED");
+                            out.newLine();
+                            out.flush();
+                        }
+                        //################################################## WRONG COMMAND
                     } else {
                         out.write("INVALID COMMAND");
                         out.newLine();
                         out.flush();
+                        continue;
                     }
                 }
             } catch (IOException e) {
