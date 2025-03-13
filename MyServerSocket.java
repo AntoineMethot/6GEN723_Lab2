@@ -17,8 +17,26 @@ public class MyServerSocket {
         while (true) {
             Socket client = this.server.accept();
             System.out.println("\r\nNew connection from Client " + clientAddress);
-            new ClientHandler(client, clientAddress, generateToken(20)).start();
+
+            String token = generateToken(20);
+            saveTokenToFile(token);
+
+            new ClientHandler(client, clientAddress, token).start();
             clientAddress += 1;
+        }
+    }
+
+    private synchronized void saveTokenToFile(String token) {
+        long expirationTime = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes from now
+    
+        try (FileWriter fw = new FileWriter("ClientTokens.txt", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+    
+            out.println(token + "|" + expirationTime);
+    
+        } catch (IOException e) {
+            System.err.println("Error writing token to file: " + e.getMessage());
         }
     }
 

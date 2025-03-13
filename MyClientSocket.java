@@ -148,6 +148,7 @@ public class MyClientSocket {
 
                         System.out.println("File saved to: " + filePath);
 
+                        //clear remaining buffer messages
                         while (in.ready()) {
                             String remainingMessage = in.readLine();
                         }
