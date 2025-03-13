@@ -159,8 +159,67 @@ public class MyClientSocket {
                 }
             }
 
+            if (data != null && data.startsWith("READ|REDIRECT")){
+
+                String[] parts = data.split("\\|");
+                if (parts.length == 6) {
+                    String fileOwnerIP = parts[2];
+                    String fileOwnerPort = parts[3];
+                    String token = parts[4];  // Add the token from the server
+                    String requestedFile = parts[5];
+    
+                    System.out.println("Redirecting to server: " + fileOwnerIP + ":" + fileOwnerPort);
+    
+                    // Now connect to the new server and request the file with the token
+                    connectToNewServer(fileOwnerIP, Integer.parseInt(fileOwnerPort), requestedFile, token);
+                }
+            }
         }
     }
+
+    private void connectToNewServer(String serverIP, int serverPort, String requestedFile, String token) {
+        try (Socket redirectSocket = new Socket(serverIP, serverPort)) {
+            System.out.println("Connected to redirected server: " + serverIP + ":" + serverPort);
+    
+            PrintWriter redirectOut = new PrintWriter(redirectSocket.getOutputStream(), true);
+            BufferedReader redirectIn = new BufferedReader(new InputStreamReader(redirectSocket.getInputStream()));
+    
+            // Send the READ command with the token to the new server
+            redirectOut.println("READ|" + token + "|" + requestedFile);
+            redirectOut.flush();
+    
+            // Receive the file from the redirected server (similar to the original code)
+            //receiveFileFromServer(redirectIn);
+        } catch (IOException e) {
+            System.err.println("Error connecting to redirected server: " + e.getMessage());
+        }
+    }
+
+    // private void receiveFileFromServer(BufferedReader in) {
+    //     try {
+    //         String line;
+    //         while ((line = in.readLine()) != null) {
+    //             if (line.startsWith("FILE|")) {
+    //                 String[] parts = line.split("\\|");
+    //                 if (parts.length >= 5) {
+    //                     String content = parts[4];
+    //                     System.out.println("Received chunk: " + content);
+    
+    //                     // You can process the file content here (save to disk, etc.)
+    
+    
+    //                     // If this is the last chunk, finalize the download
+    //                     if (parts[3].equals("1")) {
+    //                         System.out.println("Last chunk received.");
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     } catch (IOException e) {
+    //         System.err.println("Error receiving file from server: " + e.getMessage());
+    //     }
+    // }
 
     public static void main(String[] args) throws Exception {
         MyClientSocket client = new MyClientSocket(InetAddress.getByName(args[0]), Integer.parseInt(args[1]));
