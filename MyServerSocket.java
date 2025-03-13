@@ -268,7 +268,7 @@ public class MyServerSocket {
                                 System.err.println("Error reading Files_list.txt: " + e.getMessage());
                             }
 
-
+                            //Start sending file
                             if (!fileFound) {
                                 out.write("READ|FILE NOT FOUND|" + requestedFile);
                                 out.newLine();
@@ -281,6 +281,9 @@ public class MyServerSocket {
                                     out.newLine();
                                     out.flush();
                                 } else {
+                                    out.write("READ|BEGIN|" + requestedFile);
+                                    out.newLine();
+                                    out.flush();
                                     // Send the file content in chunks
                                     try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
                                         int offset = 0;

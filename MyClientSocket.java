@@ -86,6 +86,78 @@ public class MyClientSocket {
                 }
             }
 
+            if (data != null && data.startsWith("READ|BEGIN")) {
+                String[] parts = data.split("\\|");
+                if (parts.length >= 3) {
+                    String fileName = parts[2];
+                    System.out.println("Beginning File Download: " + fileName);
+
+                    String downloadFolder = "downloads";
+                    File dir = new File(downloadFolder);
+                    if (!dir.exists())
+                        dir.mkdir();
+
+                    String filePath = downloadFolder + File.separator + fileName;
+
+                    try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(filePath))) {
+
+                        boolean isLast = false;
+
+                        while (true) {
+                            String line = in.readLine(); // from server
+                            if (line == null)
+                                break;
+
+                            if (line.startsWith("FILE|")) {
+                                System.out.println("Received: " + line); // Print the FILE command
+
+                                String[] fileParts = line.split("\\|", 5);
+                                if (fileParts.length >= 5) {
+                                    String receivedFile = fileParts[1];
+                                    int offset = Integer.parseInt(fileParts[2]);
+                                    isLast = fileParts[3].equals("1");
+                                    String content = fileParts[4];
+
+                                    fileWriter.write(content);
+                                    System.out.println("Received chunk at offset " + offset);
+
+                                    // Optional: Send ACK
+                                    out.println("ACK|" + offset);
+                                    out.flush();
+
+                                    if (isLast) {
+                                        System.out.println("Last chunk received. Waiting for DONE confirmation...");
+                                        break; // exit loop to wait for final message
+                                    }
+                                } else {
+                                    System.out.println("Invalid FILE message received: " + line);
+                                }
+                            } else {
+                                System.out.println("Unexpected message during file download: " + line);
+                            }
+                        }
+
+                        // Read final confirmation (READ|DONE|filename)
+                        String doneLine = in.readLine();
+                        if (doneLine != null && doneLine.startsWith("READ|DONE")) {
+                            System.out.println("Server confirmation: " + doneLine); // Print the DONE message
+                            System.out.println("File transfer complete: " + fileName);
+                        } else {
+                            System.out.println("Expected READ|DONE but got: " + doneLine);
+                        }
+
+                        System.out.println("File saved to: " + filePath);
+
+                        while (in.ready()) {
+                            String remainingMessage = in.readLine();
+                        }
+
+                    } catch (IOException e) {
+                        System.err.println("Error writing file: " + e.getMessage());
+                    }
+                }
+            }
+
         }
     }
 
