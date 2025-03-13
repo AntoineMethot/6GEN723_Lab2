@@ -28,13 +28,13 @@ public class MyServerSocket {
 
     private synchronized void saveTokenToFile(String token) {
         long expirationTime = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes from now
-    
+
         try (FileWriter fw = new FileWriter("ClientTokens.txt", true);
-             BufferedWriter bw = new BufferedWriter(fw);
-             PrintWriter out = new PrintWriter(bw)) {
-    
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw)) {
+
             out.println(token + "|" + expirationTime);
-    
+
         } catch (IOException e) {
             System.err.println("Error writing token to file: " + e.getMessage());
         }
@@ -112,16 +112,14 @@ public class MyServerSocket {
                     String fourth = parts.length > 3 ? parts[3] : "";
                     String fifth = parts.length > 4 ? parts[4] : "";
 
-                    // ###################################################################################
-                    // REGISTER COMMAND
+                    // ################################################################################### REGISTER COMMAND
                     // REGISTER|IP_CLIENT|
                     if (COMMAND.contains("REGISTER")) {
-                        out.write("REGISTERED: " + token);
+                        out.write("REGISTERED:" + token);
                         out.newLine();
                         out.flush();
                     }
-                    // ########################################################################################
-                    // LS COMMAND
+                    // ######################################################################################## LS COMMAND
                     // LS|JETONCLIENT
                     else if (COMMAND.contains("LS")) {
                         if (second.equals(token)) {
@@ -160,7 +158,8 @@ public class MyServerSocket {
                             out.flush();
                         }
                     }
-                    // ################################################################################# FILE COMMAND
+                    // #################################################################################
+                    // FILE COMMAND
                     // FILE|nom_fichier|offset|iLAST|500
                     else if (COMMAND.contains("FILE")) {
                         if (authorizedFileToWrite != null && second.equals(authorizedFileToWrite)) {
@@ -286,7 +285,7 @@ public class MyServerSocket {
                                 System.err.println("Error reading Files_list.txt: " + e.getMessage());
                             }
 
-                            //Start sending file
+                            // Start sending file
                             if (!fileFound) {
                                 out.write("READ|FILE NOT FOUND|" + requestedFile);
                                 out.newLine();
@@ -312,7 +311,8 @@ public class MyServerSocket {
                                         while ((readCount = fileReader.read(buffer)) != -1) {
                                             boolean isLast = readCount < chunkSize;
                                             String content = new String(buffer, 0, readCount);
-                                            String fileCommand = String.format("FILE|%s|%d|%d|%s", requestedFile,offset, isLast ? 1 : 0, content);
+                                            String fileCommand = String.format("FILE|%s|%d|%d|%s", requestedFile,
+                                                    offset, isLast ? 1 : 0, content);
                                             out.write(fileCommand);
                                             out.newLine();
                                             out.flush();
@@ -334,9 +334,34 @@ public class MyServerSocket {
                                 }
                             } else {
                                 // The file is not found locally, redirect to the server that owns the file
-                                out.write("READ|REDIRECT|" + fileOwnerIP + "|" + fileOwnerPort + "|" + requestedFile);
-                                out.newLine();
-                                out.flush();
+                                try {
+                                    // Connect to the file owner server to get a token
+                                    Socket redirectSocket = new Socket(fileOwnerIP, Integer.parseInt(fileOwnerPort));
+                                    BufferedWriter redirectOut = new BufferedWriter(new OutputStreamWriter(redirectSocket.getOutputStream()));
+                                    BufferedReader redirectIn = new BufferedReader(new InputStreamReader(redirectSocket.getInputStream()));
+
+                                    // Request a token from the file owner server
+                                    redirectOut.write("REGISTER");
+                                    redirectOut.newLine();
+                                    redirectOut.flush();
+
+                                    // Read the token from the file owner server
+                                    String response = redirectIn.readLine();
+                                    String tokenFromOwner = response.split(":")[1];
+
+                                    // Send the redirect message along with the token to the client
+                                    out.write("READ|REDIRECT|" + fileOwnerIP + "|" + fileOwnerPort + "|" + tokenFromOwner + "|" + requestedFile);
+                                    out.newLine();
+                                    out.flush();
+
+                                    // Close the connection to the file owner server
+                                    redirectSocket.close();
+                                } catch (IOException e) {
+                                    System.err.println("Error connecting to file owner server: " + e.getMessage());
+                                    out.write("READ|ERROR|Unable to connect to the file owner server");
+                                    out.newLine();
+                                    out.flush();
+                                }
                             }
                         } else if (!(second.equals(token))) {
                             out.write("READ|UNAUTHORIZED");
