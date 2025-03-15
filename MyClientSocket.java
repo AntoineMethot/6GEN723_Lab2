@@ -189,7 +189,7 @@ public class MyClientSocket {
             redirectOut.flush();
     
             // Receive the file from the redirected server (similar to the original code)
-            //receiveFileFromServer(redirectIn);
+            receiveFileFromServer(redirectIn);
             String line;
             while((line = redirectIn.readLine()) != null){
                 System.out.println(line);
@@ -199,31 +199,61 @@ public class MyClientSocket {
         }
     }
 
-    // private void receiveFileFromServer(BufferedReader in) {
-    //     try {
-    //         String line;
-    //         while ((line = in.readLine()) != null) {
-    //             if (line.startsWith("FILE|")) {
-    //                 String[] parts = line.split("\\|");
-    //                 if (parts.length >= 5) {
-    //                     String content = parts[4];
-    //                     System.out.println("Received chunk: " + content);
+    private void receiveFileFromServer(BufferedReader in) {
+        try {
+            String line;
+            String filename = null;
+            BufferedWriter fileWriter = null;
     
-    //                     // You can process the file content here (save to disk, etc.)
+            while ((line = in.readLine()) != null) {
+                if (line.startsWith("FILE|")) {
+                    String[] parts = line.split("\\|", 5);
+                    if (parts.length >= 5) {
+                        filename = parts[1];
+                        int offset = Integer.parseInt(parts[2]);
+                        boolean isLast = parts[3].equals("1");
+                        String content = parts[4];
     
+                        // Ensure the "downloads" directory exists
+                        File downloadDir = new File("downloads");
+                        if (!downloadDir.exists()) {
+                            downloadDir.mkdir();
+                        }
     
-    //                     // If this is the last chunk, finalize the download
-    //                     if (parts[3].equals("1")) {
-    //                         System.out.println("Last chunk received.");
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     } catch (IOException e) {
-    //         System.err.println("Error receiving file from server: " + e.getMessage());
-    //     }
-    // }
+                        // Open file in append mode
+                        File file = new File(downloadDir, filename);
+                        if (fileWriter == null) {
+                            fileWriter = new BufferedWriter(new FileWriter(file, true)); // append mode
+                        }
+    
+                        // Write content to file
+                        fileWriter.write(content);
+    
+                        System.out.println("Received chunk at offset " + offset);
+    
+                        if (isLast) {
+                            System.out.println("Last Packet received. File saved to downloads/" + filename);
+                            break;
+                        }
+                    }
+                }
+    
+                // Drain any remaining lines
+                while (in.ready()) {
+                    in.readLine();
+                }
+            }
+    
+            // Close writer if open
+            if (fileWriter != null) {
+                fileWriter.close();
+            }
+    
+        } catch (IOException e) {
+            System.err.println("Error receiving file from server: " + e.getMessage());
+        }
+    }
+    
 
     public static void main(String[] args) throws Exception {
         MyClientSocket client = new MyClientSocket(InetAddress.getByName(args[0]), Integer.parseInt(args[1]));
