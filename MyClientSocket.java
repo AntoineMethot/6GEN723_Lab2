@@ -190,6 +190,10 @@ public class MyClientSocket {
     
             // Receive the file from the redirected server (similar to the original code)
             //receiveFileFromServer(redirectIn);
+            String line;
+            while((line = redirectIn.readLine()) != null){
+                System.out.println(line);
+            }
         } catch (IOException e) {
             System.err.println("Error connecting to redirected server: " + e.getMessage());
         }
