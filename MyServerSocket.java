@@ -390,18 +390,31 @@ public class MyServerSocket {
                             out.flush();
                         }
                         // ################################################## WRONG COMMAND
-                    } else {
+                    } 
+
+                    else if (COMMAND.equalsIgnoreCase("QUIT")) {
+                        System.out.println("Client #" + clientNumber + " requested disconnect.");
+                        client.close();
+                        System.out.println("Client #" + clientNumber + " connection closed");
+                        break; // gracefully exit loop and close connection
+                    }
+                    else {
                         out.write("INVALID COMMAND");
                         out.newLine();
                         out.flush();
                         continue;
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            }
+                catch (SocketException e) {
+                    // Handle socket reset or connection errors
+                    System.err.println("Connection reset or network error: " + e.getMessage());
+                } catch (IOException e) {
+                    // Handle other I/O errors
+                    System.err.println("I/O error: " + e.getMessage());
+                }
             }
         }
-    }
 
     // #################################################################### MAIN
     public InetAddress getSocketAddress() {

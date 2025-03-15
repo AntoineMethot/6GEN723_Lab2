@@ -1,10 +1,38 @@
 1. Do i need to save the client token in a file or DB or can I simply create the thread and store it in a variable?
+[OJ] : It depends on whether you are talking about the client or the server, whichever it is; think about what happens if a failure occurs.
+
+
 2. At any point do I want to end a thread when an error occurs? Do I need to handle all exceptions (Incorrect inputs/Client disconnect)?
+[OJ] : You have to handle exceptions and errors, but you can assume the files I give as input (peers list and files list) are well-formed, and IP addresses and ports are correct and well-formed. But for the rest, you have to think of how to manage it.
+
+
 3. In file list, the structure is: Filename:IP:port. The enoncé says if a file is local, no need to write the address. Can i put it if i'd like?
+[OJ] : try to conform to the description as given in the document
+
+
 4. READ to client, how receive data? Display in client console the contents or download to .txt file?
+[OJ] : Download to .txt file
+
+
 5. Update file_list and PeerList of all other servers when writing file?
+[OJ] : This is a good question. To give you a hint about the kind of assumptions to make, I refer you to this line in the document:
+ ‘Ces serveurs permettent la manipulation des fichiers accessibles via le serveur, mais qui ne sont pas dans la même machine que le serveur ’, 
+ and invite you to ask the following question: Let S1 and S2 be two servers, if S2 is in the list of peers of S1, does this imply necessarily 
+ that S1 is in the peer's list of S2 as well?
+
+
 6. Do we need to worry about file duplicates? If a client tries to upload an existing file?
     - Upload file already existing on local server
     - Upload file existing on another server
+[OJ] : The project description states that once a file is received, it is written to storage, so the behaviour of WRITE would overwrite an existing file
+
+
 7. For the 500 character limit, thats only the content correct? Or including the "Header"  as well (length(FILE|Nom_fichier|0|0|))?
+[OJ] : Content only
+
+
 8. Instead of sending read redirect to client, why dont we just get the server to fetch de data from the other server?
+[OJ] : You can add things that are not in the specification, but you cannot modify specified things (This is regarding the project). 
+TCP handoff is a mechanism used in load balancer and it is similar to the behaviour you are having a problem with.
+
+9. Try-with-resources automatically closes thread. still need JOIN?

@@ -61,8 +61,19 @@ public class MyClientSocket {
         while (true) {
             input = scanner.nextLine();
             PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
+            
+            // Handle graceful exit
+            if (input.equalsIgnoreCase("QUIT")) {
+                out.println("QUIT");
+                out.flush();
+                System.out.println("Disconnecting from server...");
+                socket.close(); // close connection cleanly
+                break; // exit loop
+            }
+            
             out.println(input);
             out.flush();
+            
 
             String data = in.readLine();
             System.out.println(data);
@@ -190,13 +201,11 @@ public class MyClientSocket {
     
             // Receive the file from the redirected server (similar to the original code)
             receiveFileFromServer(redirectIn);
-            String line;
-            while((line = redirectIn.readLine()) != null){
-                System.out.println(line);
-            }
+            System.out.println("Connection to peer server closed.");
         } catch (IOException e) {
             System.err.println("Error connecting to redirected server: " + e.getMessage());
         }
+
     }
 
     private void receiveFileFromServer(BufferedReader in) {
