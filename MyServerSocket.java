@@ -316,6 +316,7 @@ public class MyServerSocket {
                                 out.flush();
                             } else if (localFile) {
                                 // The file is found locally, send it to the client
+                                System.out.println("Starting to send local file");
                                 File file = new File("uploads/" + requestedFile);
                                 if (!file.exists()) {
                                     out.write("READ|ERROR|File missing from disk");
