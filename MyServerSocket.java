@@ -202,13 +202,18 @@ public class MyServerSocket {
                             int offset = Integer.parseInt(third);
                             boolean isLast = fourth.equals("1");
                             String content = fifth;
-
+                            
                             File dir = new File("uploads");
                             if (!dir.exists())
                                 dir.mkdir();
                             // Write content to file
+                            if (isLast) {
+                                content = content.replaceAll("~+$", ""); // Remove only trailing tildes
+                            }
+                            
                             File file = new File(dir, filename);
                             FileWriter fw = new FileWriter(file, true);
+                            
                             fw.write(content);
                             fw.close();
                             // Write out length of message
@@ -224,8 +229,7 @@ public class MyServerSocket {
                                 out.flush();
 
                                 // Append to Files_list.txt
-                                try (BufferedWriter fileWriter = new BufferedWriter(
-                                        new FileWriter("Files_list.txt", true))) {
+                                try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("Files_list.txt", true))) {
                                     String serverIP = client.getLocalAddress().getHostAddress();
                                     int serverPort = client.getLocalPort();
                                     fileWriter.write(filename + ":" + serverIP + ":" + serverPort);
