@@ -473,52 +473,35 @@ public class MyServerSocket {
         return this.server.getLocalPort();
     }
 
+
     public static void main(String[] args) throws Exception {
         MyServerSocket app = new MyServerSocket();
         System.out.println(
                 "Running Server: " + "Host=" + app.getSocketAddress().getHostAddress() + " Port=" + app.getPort());
 
-        // try {
-        // File Peers = new File("Peers_list.txt");
-        // Scanner myReader = new Scanner(Peers);
-        // if (Peers.exists()) {
-        // System.out.println("Peers List: ");
-        // while (myReader.hasNextLine()) {
-        // String data = myReader.nextLine();
-        // String[] parts = data.split(":");
-        // String ipAddress = parts[0].trim(); // IP address
-        // String port = parts[1].trim(); // Port
+        try {
+            File Peers = new File("Peers_list.txt");
+            Scanner myReader = new Scanner(Peers);
+            if (Peers.exists()) {
+                System.out.println("Peers List: ");
+                while (myReader.hasNextLine()) {
+                    String data = myReader.nextLine();
+                    String[] parts = data.split(":");
+                    String ipAddress = parts[0].trim(); // IP address
+                    String port = parts[1].trim(); // Port
 
-        // InetAddress address = InetAddress.getByName(ipAddress);
-        // boolean reachable = address.isReachable(Integer.parseInt(port));
+                    InetAddress address = InetAddress.getByName(ipAddress);
+                    boolean reachable = address.isReachable(Integer.parseInt(port));
 
-        // System.out.println(reachable ? data + " is reachable" : data + " is not
-        // reachable");
-        // }
-        // }
-        // myReader.close();
-        // } catch (FileNotFoundException e) {
-        // System.out.println("File not Found");
-        // e.printStackTrace();
-        // }
+                    System.out.println(reachable ? data + " is reachable" : data + " is not reachable");
+                }
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("File not Found");
+            e.printStackTrace();
+        }
 
-        // System.out.println("Connect to another server? (Y/N):");
-        // Scanner input = new Scanner(System.in);
-        // String connectToServer = input.nextLine();
-        // if(connectToServer.equals("Y")){
-        // System.out.println("Enter IP and PORT (EX. 192.168.1.1:65000)");
-        // String serverAddress = input.nextLine();
-        // input.close();
-
-        // String[] serverAddressParts = serverAddress.split(":");
-        // String ServerIp = serverAddressParts[0];
-        // int ServerPort = Integer.parseInt(serverAddressParts[1]);
-
-        // app.connectToAnotherServer(ServerIp, ServerPort);
-        // }
-        // else if (connectToServer.equals("N")) {
-
-        // }
 
         app.listen();
     }
