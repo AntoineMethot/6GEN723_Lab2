@@ -319,8 +319,8 @@ public class MyServerSocket {
                                 System.out.println("Starting to send local file");
                                 File file = new File("uploads/" + requestedFile);
                                 if (!file.exists()) {
-                                    out.write("READ|ERROR|File missing from disk");
                                     System.out.println("READ|ERROR|File missing from disk");
+                                    out.write("READ|ERROR|File missing from disk");
                                     out.newLine();
                                     out.flush();
                                 } else {
