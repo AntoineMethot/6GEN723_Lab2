@@ -135,7 +135,9 @@ public class MyClientSocket {
                                     int offset = Integer.parseInt(fileParts[2]);
                                     isLast = fileParts[3].equals("1");
                                     String content = fileParts[4];
-
+                                    if (isLast) {
+                                        content = content.replaceAll("~+$", "");
+                                    }
                                     fileWriter.write(content);
                                     System.out.println("Received chunk at offset " + offset);
 

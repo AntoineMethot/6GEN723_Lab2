@@ -210,7 +210,7 @@ public class MyServerSocket {
                             if (isLast) {
                                 content = content.replaceAll("~+$", ""); // Remove only trailing tildes
                             }
-                            
+
                             File file = new File(dir, filename);
                             FileWriter fw = new FileWriter(file, true);
                             
@@ -347,6 +347,12 @@ public class MyServerSocket {
                                         while ((readCount = fileReader.read(buffer)) != -1) {
                                             boolean isLast = readCount < chunkSize;
                                             String content = new String(buffer, 0, readCount);
+
+                                            // Pad only if it's the last chunk and needs padding
+                                            if (isLast && readCount < chunkSize) {
+                                                int paddingLength = chunkSize - readCount;
+                                                content += "~".repeat(paddingLength);
+}
                                             String fileCommand = String.format("FILE|%s|%d|%d|%s", requestedFile,
                                                     offset, isLast ? 1 : 0, content);
                                             out.write(fileCommand);
