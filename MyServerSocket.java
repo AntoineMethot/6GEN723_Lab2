@@ -320,12 +320,14 @@ public class MyServerSocket {
                                 File file = new File("uploads/" + requestedFile);
                                 if (!file.exists()) {
                                     out.write("READ|ERROR|File missing from disk");
+                                    System.out.println("READ|ERROR|File missing from disk");
                                     out.newLine();
                                     out.flush();
                                 } else {
                                     out.write("READ|BEGIN|" + requestedFile);
                                     out.newLine();
                                     out.flush();
+                                    System.out.println("READ|BEGIN|" + requestedFile);
                                     // Send the file content in chunks
                                     try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
                                         int offset = 0;
@@ -341,6 +343,7 @@ public class MyServerSocket {
                                             out.write(fileCommand);
                                             out.newLine();
                                             out.flush();
+                                            System.out.println(fileCommand);
 
                                             offset += readCount;
 
@@ -349,9 +352,11 @@ public class MyServerSocket {
                                         }
 
                                         // Optional: send a DONE message when file is fully sent
+
                                         out.write("READ|DONE|" + requestedFile);
                                         out.newLine();
                                         out.flush();
+                                        System.out.println("SENDING READ DONE");
 
                                     } catch (IOException e) {
                                         System.err.println("Error sending file: " + e.getMessage());
